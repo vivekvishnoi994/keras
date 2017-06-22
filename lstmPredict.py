@@ -30,41 +30,66 @@ loaded_model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['
 #print("%s: %.2f%%" % (loaded_model.metrics_names[1], score[1]*100))
 
 ## to predict the results for new inputs
-text = "this is worst movie ever"
+text = ["this is worst movie ever","this one is a good movie","this is not nice"]
+
 tk = keras.preprocessing.text.Tokenizer(
 		num_words = 2000,					#max no.of words in the dataset
 		lower = True,
 		split = " ")
 
-from sklearn.feature_extraction.text import CountVectorizer
-vectorizer = CountVectorizer(analyzer = "word",   
-                         tokenizer = None,    
-                         preprocessor = None, 
-                         stop_words = None,   
-                         max_features = 5000) 
+#from sklearn.feature_extraction.text import CountVectorizer
+#vectorizer = CountVectorizer(analyzer = "word",   
+#                         tokenizer = None,    
+#                         preprocessor = None, 
+#                         stop_words = None,   
+#                         max_features = 5000) 
 
-train_data_features = vectorizer.fit_transform(text)
-train_data_features = train_data_features.toarray()
-print (train_data_features)
-print ('close')
+#train_data_features = vectorizer.fit_transform(text)
+#train_data_features = train_data_features.toarray()
+#print (train_data_features)
+#print ('close')
 
-
-text = np.array(['this is excellent sentence'])
+#text = "this movie is the worst movie"
+#text = np.array(['this is excellent sentence'])
 #print(text.shape)
-tk = keras.preprocessing.text.Tokenizer( nb_words=2000, lower=True,split=" ")
+#tk = keras.preprocessing.text.Tokenizer( nb_words=2000, lower=True,split=" ")
+
+#predictions = loaded_model.predict(train_data_features)
+#predictions = loaded_model.predict(np.array(sequence.pad_sequences(tk.texts_to_sequences(text))))
+#predictions = loaded_model.predict(np.array(tk.fit_on_texts(text)))
+#text = keras.preprocessing.text.one_hot(text, 500, filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n', lower=True, split=" ")
+#from prepareData import load_data
+#xx,yy,vocSize,ixToChar = load_data('testData.txt',10)
 
 
+## Method 1
+#You need to represent raw text data as numeric vector before training a neural network model. For this, you can use CountVectorizer or TfidfVectorizer provided by scikit-learn. After converting from raw text format to numeric vector representation, you can train a RNN/LSTM/CNN for text classification problem.
+#from sklearn.datasets import fetch_20newsgroups
+#categories = ['alt.atheism', 'soc.religion.christian','comp.graphics', 'sci.med']
+#twenty_train = fetch_20newsgroups(subset='train',categories=categories, shuffle=True, random_state=42)
+#print (twenty_train)
+#from sklearn.feature_extraction.text import CountVectorizer
+#count_vect = CountVectorizer()
+#X_train_counts = count_vect.fit_transform('testdata.txt')
+#print(X_train_counts.shape)
 
-print (tk)
-print ('\n')
-tk.fit_on_texts(text)					#method of keras's tokenizer (other methods are also there)
-print (tk.fit_on_texts(text))
-print ('\n')
-print (tk.texts_to_sequences(text))
-print ('\n')
-print (np.array(tk.texts_to_sequences(text)))
-predictions = loaded_model.predict(np.array(sequence.pad_sequences(tk.texts_to_sequences(text))))
+
+## Method 2
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from keras.datasets import imdbCopy
+data = imdbCopy.get_word_index()
+vocabulary_to_load = data
+count_vect = CountVectorizer(vocabulary=vocabulary_to_load)
+count_vect._validate_vocabulary()
+tfidf_transformer = TfidfVectorizer()
+docs_test = ['this is good movie','this is worst movie']
+x_new_counts = count_vect.transform(docs_test)
+x_new_tfidf = tfidf_transformer.transfrom(x_new_tfidf)
+predictions = loaded_model.predict(x_new_tfidf)
 print(predictions)
 f = open('predict.txt','w')
 f.write(predictions)
 f.close()
+
+
