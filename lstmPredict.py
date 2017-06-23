@@ -7,8 +7,15 @@ import numpy as np
 from keras.models import model_from_json
 import keras.preprocessing.text
 from keras.preprocessing import sequence
+from keras.datasets import imdbCopy as imdb
 #from keras.models import Sequential
 #model = Sequential()
+top_words = 5000
+(X_train, y_train), (X_test, y_test) = imdb.load_data(nb_words=top_words)
+max_review_length = 500
+
+X_train = sequence.pad_sequences(X_train, maxlen=max_review_length)
+X_test = sequence.pad_sequences(X_test, maxlen=max_review_length)
 
 
 ## we need to load the model first which is saved by lstmKeras.py file
@@ -20,13 +27,12 @@ loaded_model = model_from_json(loaded_model_json)
 # load weights into new model
 loaded_model.load_weights("lstmModel.h5")
 print("Loaded model from disk")
- 
 
 ## after loading the model we can use it for future predictions
 # evaluate loaded model on test data
 loaded_model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
 # change the parameter of next line according to the data you are using and evaluate is for comparing only
-#score = loaded_model.evaluate(X, Y, verbose=0)
+#score = loaded_model.evaluate(X_test, y_test, verbose=0)
 #print("%s: %.2f%%" % (loaded_model.metrics_names[1], score[1]*100))
 
 ## to predict the results for new inputs
@@ -75,21 +81,31 @@ tk = keras.preprocessing.text.Tokenizer(
 
 
 ## Method 2
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from keras.datasets import imdbCopy
-data = imdbCopy.get_word_index()
-vocabulary_to_load = data
-count_vect = CountVectorizer(vocabulary=vocabulary_to_load)
-count_vect._validate_vocabulary()
-tfidf_transformer = TfidfVectorizer()
-docs_test = ['this is good movie','this is worst movie']
-x_new_counts = count_vect.transform(docs_test)
-x_new_tfidf = tfidf_transformer.transfrom(x_new_tfidf)
-predictions = loaded_model.predict(x_new_tfidf)
+
+#from sklearn.feature_extraction.text import CountVectorizer
+#from sklearn.feature_extraction.text import TfidfVectorizer
+#from keras.datasets import imdbCopy
+#data = imdbCopy.get_word_index()
+#vocabulary_to_load = data
+#count_vect = CountVectorizer(vocabulary=vocabulary_to_load)
+#count_vect._validate_vocabulary()
+#tfidf_transformer = TfidfVectorizer()
+#docs_test = ['this is good movie','this is worst movie']
+#x_new_counts = count_vect.transform(docs_test)
+#x_new_tfidf = tfidf_transformer.transfrom(x_new_tfidf)
+
+
+
+## Method 3
+text = ['it was really bad movie','it is the best movie i ever watched','best movie ever made','this movie is not worth watching']
+import keras.preprocessing.text
+for i in range(len(text)):
+	text[i] = keras.preprocessing.text.one_hot(text[i], 5000,filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n', lower=True, split=" ")
+
+text = sequence.pad_sequences(text, 500)
+predictions = loaded_model.predict_classes(text,verbose=0)
 print(predictions)
-f = open('predict.txt','w')
+f = open('predict.txt','rw')
 f.write(predictions)
 f.close()
-
 
